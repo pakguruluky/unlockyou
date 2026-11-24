@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <!-- Pengaturan viewport agar responsif di layar Chromebook maupun perangkat lain -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Aplikasi Web - Chromebook Launcher</title>
+
+    <!-- Favicon SVG langsung (agar ikon tab Chrome terlihat rapi) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Crect width='24' height='24' rx='6' fill='%231e293b'/%3E%3Cpath d='M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+
+    <!-- Memuat font Inter dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Memuat Tailwind CSS untuk styling modern dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-screen w-screen overflow-hidden flex flex-col select-none">
+
+    <!-- Bilah Navigasi Atas (Toolbar) -->
+    <header id="toolbar" class="bg-slate-900/95 border-b border-slate-800 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-3 z-20 transition-all duration-300 shadow-md">
+        <!-- Bagian Kiri: Ikon dan Status -->
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div class="truncate">
+                <h1 class="text-sm sm:text-base font-semibold text-white truncate">Aplikasi Web Chromebook</h1>
+                <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="statusText" class="truncate">Menghubungkan ke server...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian Kanan: Tombol Kontrol -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Tombol Muat Ulang -->
+            <button id="btnReload" type="button" title="Muat Ulang Aplikasi"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs sm:text-sm font-medium transition cursor-pointer border border-slate-700/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="hidden md:inline">Muat Ulang</span>
+            </button>
+
+            <!-- Tombol Layar Penuh (Fullscreen) -->
+            <button id="btnFullscreen" type="button" title="Mode Layar Penuh"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs sm:text-sm font-medium transition cursor-pointer border border-slate-700/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <span class="hidden md:inline" id="fullscreenLabel">Layar Penuh</span>
+            </button>
+
+            <!-- Tombol Sembunyikan Toolbar -->
+            <button id="btnHideBar" type="button" title="Sembunyikan Bilah Atas"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs sm:text-sm font-medium transition cursor-pointer border border-slate-700/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
+                <span class="hidden lg:inline">Sembunyikan</span>
+            </button>
+
+            <!-- Tombol Buka Langsung di Tab Baru -->
+            <a id="btnOpenDirect"
+                href="https://script.google.com/macros/s/AKfycbzv4pa1iQgr5_zQrSFJ82yYPLBirfLUF0yFVIIEwn0n0RF4d0L4CjCv8xBCghdUbS_jhw/exec"
+                target="_blank" rel="noopener noreferrer" title="Buka Langsung di Tab Baru"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs sm:text-sm font-medium transition shadow-md shadow-blue-600/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                <span class="hidden sm:inline">Buka Langsung</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Tombol Mengambang untuk Menampilkan Kembali Toolbar -->
+    <button id="btnShowBar" type="button" title="Tampilkan Bilah Atas"
+        class="hidden fixed top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-200 text-xs font-medium shadow-xl border border-slate-700/80 backdrop-blur-md transition active:scale-95 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+        <span>Menu</span>
+    </button>
+
+    <!-- Kontainer Utama untuk Iframe -->
+    <main class="relative flex-1 w-full h-full bg-white overflow-hidden">
+
+        <!-- Layar Loading -->
+        <div id="loadingOverlay" class="absolute inset-0 z-10 bg-slate-950 flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
+            <div class="w-12 h-12 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin mb-4"></div>
+            <h2 class="text-lg font-semibold text-white mb-1">Memuat Aplikasi...</h2>
+            <p class="text-sm text-slate-400 max-w-md mb-6">
+                Mohon tunggu sebentar, sedang mengambil halaman dari Google Apps Script.
+            </p>
+            <!-- Pesan bantuan jika loading terlalu lama -->
+            <div id="slowLoadHint" class="hidden max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 text-left shadow-lg">
+                <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                    <strong class="text-amber-400">Halaman tidak muncul atau meminta login Google?</strong><br>
+                    Pastikan Anda sudah login ke akun Google di Chromebook, atau buka aplikasi secara langsung melalui tombol di bawah ini.
+                </p>
+                <a href="https://script.google.com/macros/s/AKfycbzv4pa1iQgr5_zQrSFJ82yYPLBirfLUF0yFVIIEwn0n0RF4d0L4CjCv8xBCghdUbS_jhw/exec"
+                    target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition">
+                    Buka Aplikasi di Tab Baru
+                </a>
+            </div>
+        </div>
+
+        <!-- Iframe Embed Google Apps Script -->
+        <iframe
+            id="appFrame"
+            src="https://script.google.com/macros/s/AKfycbzv4pa1iQgr5_zQrSFJ82yYPLBirfLUF0yFVIIEwn0n0RF4d0L4CjCv8xBCghdUbS_jhw/exec"
+            title="Aplikasi Google Apps Script"
+            class="w-full h-full border-0 block bg-white"
+            allow="fullscreen; camera; microphone; geolocation; clipboard-read; clipboard-write"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </main>
+
+    <!-- Notifikasi Toast -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-xl bg-slate-900/95 text-slate-100 text-xs sm:text-sm font-medium border border-slate-700 shadow-2xl opacity-0 pointer-events-none transition-all duration-300 translate-y-2">
+        Pesan notifikasi
+    </div>
+
+    <script>
+        (function () {
+            const TARGET_URL = "https://script.google.com/macros/s/AKfycbzv4pa1iQgr5_zQrSFJ82yYPLBirfLUF0yFVIIEwn0n0RF4d0L4CjCv8xBCghdUbS_jhw/exec";
+
+            const appFrame = document.getElementById('appFrame');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const slowLoadHint = document.getElementById('slowLoadHint');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const toolbar = document.getElementById('toolbar');
+            const btnReload = document.getElementById('btnReload');
+            const btnFullscreen = document.getElementById('btnFullscreen');
+            const fullscreenLabel = document.getElementById('fullscreenLabel');
+            const btnHideBar = document.getElementById('btnHideBar');
+            const btnShowBar = document.getElementById('btnShowBar');
+            const toast = document.getElementById('toast');
+
+            let slowLoadTimer = null;
+            let toastTimer = null;
+
+            function showToast(message) {
+                try {
+                    toast.textContent = message;
+                    toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+                    toast.classList.add('opacity-100', 'translate-y-0');
+
+                    if (toastTimer) clearTimeout(toastTimer);
+                    toastTimer = setTimeout(() => {
+                        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+                        toast.classList.remove('opacity-100', 'translate-y-0');
+                    }, 3000);
+                } catch (err) {
+                    console.error('Gagal menampilkan toast:', err);
+                }
+            }
+
+            function startLoadingState() {
+                loadingOverlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+                loadingOverlay.classList.add('opacity-100');
+                slowLoadHint.classList.add('hidden');
+
+                statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+                statusText.textContent = 'Memuat aplikasi...';
+
+                if (slowLoadTimer) clearTimeout(slowLoadTimer);
+                slowLoadTimer = setTimeout(() => {
+                    slowLoadHint.classList.remove('hidden');
+                }, 6000);
+            }
+
+            function finishLoadingState() {
+                if (slowLoadTimer) clearTimeout(slowLoadTimer);
+                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                }, 500);
+
+                statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                statusText.textContent = 'Terhubung';
+            }
+
+            appFrame.addEventListener('load', () => {
+                finishLoadingState();
+            });
+
+            btnReload.addEventListener('click', () => {
+                try {
+                    startLoadingState();
+                    appFrame.src = TARGET_URL;
+                    showToast('Memuat ulang aplikasi...');
+                } catch (err) {
+                    console.error('Gagal memuat ulang iframe:', err);
+                    showToast('Gagal memuat ulang. Coba tombol Buka Langsung.');
+                }
+            });
+
+            btnFullscreen.addEventListener('click', async () => {
+                try {
+                    if (!document.fullscreenElement) {
+                        await document.documentElement.requestFullscreen();
+                        showToast('Mode layar penuh aktif');
+                    } else {
+                        await document.exitFullscreen();
+                        showToast('Keluar dari layar penuh');
+                    }
+                } catch (err) {
+                    console.error('Error Fullscreen:', err);
+                    showToast('Browser tidak mengizinkan mode layar penuh otomatis');
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                fullscreenLabel.textContent = document.fullscreenElement ? 'Keluar' : 'Layar Penuh';
+            });
+
+            btnHideBar.addEventListener('click', () => {
+                toolbar.classList.add('hidden');
+                btnShowBar.classList.remove('hidden');
+                showToast('Bilah atas disembunyikan. Klik tombol Menu di kanan atas untuk memunculkannya.');
+            });
+
+            btnShowBar.addEventListener('click', () => {
+                toolbar.classList.remove('hidden');
+                btnShowBar.classList.add('hidden');
+            });
+
+            startLoadingState();
+        })();
+    </script>
+</body>
+</html>
